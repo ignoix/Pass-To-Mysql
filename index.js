@@ -1,3 +1,4 @@
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
@@ -10,6 +11,9 @@ const dbConfig = {
   password: process.env.DB_PASSWORD || 'password',
   database: process.env.DB_NAME || 'local_pass'
 };
+
+// 加密密钥（建议使用环境变量）
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'mySecretKey123456789012345678901234567890';
 
 // 读取 CSV 并插入数据库
 async function importChromePasswords(filePath) {
@@ -34,7 +38,7 @@ async function importChromePasswords(filePath) {
       name VARCHAR(255),
       url VARCHAR(500),
       username VARCHAR(255),
-      password VARCHAR(255),
+      password_encrypted BLOB,
       note TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
@@ -61,12 +65,13 @@ async function importChromePasswords(filePath) {
     .on('end', async () => {
       try {
         for (const [name, url, username, password, note] of rows) {
+          // 使用MySQL的AES_ENCRYPT函数加密密码
           await connection.query(
-            'INSERT INTO passwords (name, url, username, password, note) VALUES (?, ?, ?, ?, ?)',
-            [name, url, username, password, note]
+            'INSERT INTO passwords (name, url, username, password_encrypted, note) VALUES (?, ?, ?, AES_ENCRYPT(?, ?), ?)',
+            [name, url, username, password, ENCRYPTION_KEY, note]
           );
         }
-        console.log(`成功导入 ${rows.length} 条记录到MySQL数据库`);
+        console.log(`成功导入 ${rows.length} 条记录到MySQL数据库（密码已加密存储）`);
       } catch (err) {
         console.error('导入失败:', err);
       } finally {

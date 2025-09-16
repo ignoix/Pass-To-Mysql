@@ -5,10 +5,12 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "decrypt": "node decrypt.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "csv-parser": "^3.0.0",
+    "dotenv": "^17.2.2",
     "mysql2": "^3.6.0"
   },
   "author": "",
