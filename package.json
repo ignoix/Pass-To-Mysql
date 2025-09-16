@@ -4,9 +4,21 @@
   "description": "Import Chrome passwords to MySQL database",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "decrypt": "node decrypt.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node cli.js import",
+    "import": "node cli.js import",
+    "import-file": "node cli.js import",
+    "query": "node cli.js query",
+    "stats": "node cli.js stats",
+    "duplicates": "node cli.js duplicates",
+    "empty-notes": "node cli.js empty-notes",
+    "recent": "node cli.js recent",
+    "weak-passwords": "node cli.js weak-passwords",
+    "email-stats": "node cli.js email-stats",
+    "validate-key": "node cli.js validate-key",
+    "test": "node cli.js test",
+    "help": "node cli.js help",
+    "legacy:import": "node import-multiple.js",
+    "legacy:decrypt": "node decrypt.js"
   },
   "dependencies": {
     "csv-parser": "^3.0.0",

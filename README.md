@@ -7,6 +7,8 @@
 - 🔐 安全导入Chrome密码数据到MySQL数据库
 - 🔒 **密码加密存储** - 使用MySQL AES加密，密码以密文形式存储
 - 🔓 **密码解密查询** - 提供专门的解密工具查看密码
+- 📁 **多平台支持** - 支持导入多个来源的密码文件，自动标记来源
+- 🔄 **智能去重更新** - 自动检测重复记录，相同数据跳过，不同数据更新
 - 📊 自动创建数据库和表结构
 - 🛡️ 数据验证和过滤（只导入有效的用户名和密码）
 - 📈 支持批量导入，高效处理大量数据
@@ -54,43 +56,107 @@
    - `.env` 文件已添加到 `.gitignore` 中，不会被提交到仓库
    - `ENCRYPTION_KEY` 用于加密/解密密码，建议使用32位随机字符串
 
-4. **准备Chrome密码文件**
+4. **准备密码文件**
    
-   - 打开Chrome浏览器
-   - 访问 `chrome://settings/passwords`
-   - 点击"导出密码"按钮
-   - 将导出的CSV文件重命名为 `Chrome.csv` 并放在项目根目录
+   - 将CSV密码文件放在项目根目录
+   - 支持多个文件同时导入（如：Chrome.csv, Firefox.csv, Edge.csv等）
+   - 文件名将作为密码来源标记
 
 5. **运行导入**
    ```bash
+   # 批量导入所有CSV文件
    npm start
    # 或者
-   node index.js
+   npm run import
+   
+   # 导入指定文件
+   npm run import-file sources/Chrome.csv
+   
+   # 使用CLI命令
+   node cli.js import                    # 导入所有文件
+   node cli.js import sources/Chrome.csv # 导入指定文件
    ```
 
 6. **查看密码（解密）**
    ```bash
    # 查看所有密码
-   npm run decrypt all
+   npm run query all
+   # 或者
+   node cli.js query all
    
    # 搜索特定密码
-   npm run decrypt search google
+   npm run query google
+   # 或者
+   node cli.js query google
    
    # 查看统计信息
-   npm run decrypt stats
+   npm run stats
+   # 或者
+   node cli.js stats
+   ```
+
+7. **高级查询功能**
+   ```bash
+   # 查找重复网站
+   npm run duplicates
+   
+   # 查找空备注记录
+   npm run empty-notes
+   
+   # 查找最近添加的记录
+   npm run recent 5
+   
+   # 查找弱密码
+   npm run weak-passwords
+   
+   # 按邮箱域名统计
+   npm run email-stats
+   
+   # 验证加密密钥
+   npm run validate-key
+   ```
+
+8. **创建测试数据**
+   ```bash
+   # 创建测试CSV文件
+   npm run test
+   # 或者
+   node cli.js test
    ```
 
 ## 📁 项目结构
 
 ```
 pass-to-mysql/
-├── Chrome.csv          # Chrome导出的密码文件（已忽略）
-├── index.js            # 主程序文件（导入）
-├── decrypt.js          # 密码解密查询工具
-├── sql-queries.md      # SQL查询语句参考文档
-├── package.json        # 项目配置和依赖
-├── .gitignore         # Git忽略文件
-└── README.md          # 项目说明文档
+├── src/                    # 源代码目录
+│   ├── config/            # 配置文件
+│   │   └── database.js    # 数据库和加密配置
+│   ├── services/          # 业务逻辑服务
+│   │   └── passwordService.js  # 密码管理服务
+│   ├── utils/             # 工具类
+│   │   ├── database.js    # 数据库操作工具
+│   │   ├── fileHandler.js # 文件处理工具
+│   │   └── sqlQuery.js    # SQL查询工具
+│   ├── sql/               # SQL语句管理
+│   │   ├── schema.js      # 表结构SQL
+│   │   ├── queries.js     # 查询SQL
+│   │   └── index.js       # SQL统一导出
+│   └── index.js           # 主程序入口
+├── sources/               # 密码文件目录
+│   ├── Chrome.csv         # Chrome导出的密码文件
+│   ├── Firefox.csv        # Firefox导出的密码文件
+│   └── Edge.csv           # Edge导出的密码文件
+├── tests/                 # 测试文件
+│   └── createTestData.js  # 测试数据生成器
+├── docs/                  # 文档目录
+│   └── sql-queries.md     # SQL查询语句参考
+├── cli.js                 # 命令行接口
+├── index.js               # 旧版入口文件（兼容性）
+├── import-multiple.js     # 旧版批量导入（兼容性）
+├── decrypt.js             # 旧版解密工具（兼容性）
+├── package.json           # 项目配置和依赖
+├── .gitignore            # Git忽略文件
+└── README.md             # 项目说明文档
 ```
 
 ## 🗄️ 数据库结构
@@ -105,20 +171,34 @@ pass-to-mysql/
 | username | VARCHAR(255) | 用户名 |
 | password_encrypted | BLOB | **加密后的密码**（使用AES加密） |
 | note | TEXT | 备注信息 |
+| from | VARCHAR(255) | **密码来源**（文件名，如Chrome、Firefox等） |
 | created_at | TIMESTAMP | 创建时间 |
+| updated_at | TIMESTAMP | 更新时间 |
 
 **🔒 安全说明**：密码以加密形式存储在 `password_encrypted` 字段中，需要使用正确的密钥才能解密查看。
+
+**🔄 去重机制**：系统会根据 `name`、`url`、`username`、`from` 四个字段的组合来判断记录是否重复。
 
 ## 📊 使用示例
 
 ### 导入数据
 ```bash
-# 运行导入程序
+# 导入单个文件
 npm start
 
+# 批量导入所有CSV文件
+npm run import
+
+# 导入指定文件
+npm run import-file Firefox.csv
+
 # 输出示例：
-# 正在导入数据…
-# 成功导入 93 条记录到MySQL数据库
+# 📊 导入完成统计:
+#    ✅ 新增记录: 45 条
+#    🔄 更新记录: 8 条
+#    ⏭️  跳过记录: 12 条
+#    📁 来源文件: Chrome
+#    🔒 密码已加密存储
 ```
 
 ### 查看密码（解密）
@@ -140,7 +220,7 @@ npm run decrypt stats
 #### 查看加密状态的密码
 ```sql
 -- 查看所有记录（密码为加密状态）
-SELECT id, name, url, username, password_encrypted, note, created_at FROM passwords;
+SELECT id, name, url, username, password_encrypted, note, \`from\`, created_at, updated_at FROM passwords;
 
 -- 查看特定网站的加密密码
 SELECT * FROM passwords WHERE name LIKE '%google%';
@@ -156,8 +236,11 @@ SELECT
   username, 
   CAST(AES_DECRYPT(password_encrypted, 'your_encryption_key') AS CHAR) as password,
   note, 
-  created_at 
-FROM passwords;
+  \`from\`,
+  created_at,
+  updated_at
+FROM passwords 
+ORDER BY \`from\`, name;
 
 -- 解密查看特定网站的密码
 SELECT 
@@ -177,9 +260,22 @@ SELECT
   url, 
   username, 
   CAST(AES_DECRYPT(password_encrypted, 'your_encryption_key') AS CHAR) as password,
-  note 
+  note,
+  \`from\`
 FROM passwords 
 WHERE username LIKE '%@gmail.com%';
+
+-- 解密查看特定来源的密码
+SELECT 
+  id, 
+  name, 
+  url, 
+  username, 
+  CAST(AES_DECRYPT(password_encrypted, 'your_encryption_key') AS CHAR) as password,
+  note,
+  \`from\`
+FROM passwords 
+WHERE \`from\` = 'Chrome';
 
 -- 解密查看最近添加的密码
 SELECT 
@@ -197,6 +293,14 @@ LIMIT 10;
 
 #### 统计查询
 ```sql
+-- 按来源文件统计
+SELECT 
+  \`from\` as source,
+  COUNT(*) as count
+FROM passwords 
+GROUP BY \`from\`
+ORDER BY count DESC;
+
 -- 按网站类型统计
 SELECT 
   CASE 

@@ -30,14 +30,16 @@ async function decryptPasswords(searchTerm = '') {
           name,
           url,
           username,
-          AES_DECRYPT(password_encrypted, ?) as password,
+          CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
           note,
-          created_at
+          \`from\`,
+          created_at,
+          updated_at
         FROM passwords 
-        WHERE name LIKE ? OR username LIKE ? OR url LIKE ?
-        ORDER BY name
+        WHERE name LIKE ? OR username LIKE ? OR url LIKE ? OR \`from\` LIKE ?
+        ORDER BY \`from\`, name
       `;
-      params = [ENCRYPTION_KEY, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`];
+      params = [ENCRYPTION_KEY, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`];
     } else {
       // 查询所有记录
       query = `
@@ -46,11 +48,13 @@ async function decryptPasswords(searchTerm = '') {
           name,
           url,
           username,
-          AES_DECRYPT(password_encrypted, ?) as password,
+          CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
           note,
-          created_at
+          \`from\`,
+          created_at,
+          updated_at
         FROM passwords 
-        ORDER BY name
+        ORDER BY \`from\`, name
       `;
       params = [ENCRYPTION_KEY];
     }
@@ -70,10 +74,14 @@ async function decryptPasswords(searchTerm = '') {
       console.log(`   URL: ${row.url}`);
       console.log(`   用户名: ${row.username}`);
       console.log(`   密码: ${row.password}`);
+      console.log(`   来源: ${row.from}`);
       if (row.note) {
         console.log(`   备注: ${row.note}`);
       }
       console.log(`   创建时间: ${row.created_at}`);
+      if (row.updated_at && row.updated_at !== row.created_at) {
+        console.log(`   更新时间: ${row.updated_at}`);
+      }
       console.log('-'.repeat(80));
     });
     
@@ -95,6 +103,19 @@ async function getPasswordStats() {
     const [countResult] = await connection.query('SELECT COUNT(*) as total FROM passwords');
     console.log(`\n数据库中共有 ${countResult[0].total} 条密码记录\n`);
     
+    // 按来源文件统计
+    const [sourceResult] = await connection.query(`
+      SELECT 
+        \`from\` as source,
+        COUNT(*) as count
+      FROM passwords 
+      GROUP BY \`from\`
+      ORDER BY count DESC
+    `);
+    
+    console.log('按来源文件分组的统计：');
+    console.table(sourceResult);
+    
     // 按网站类型统计
     const [groupResult] = await connection.query(`
       SELECT 
@@ -112,7 +133,7 @@ async function getPasswordStats() {
       ORDER BY count DESC
     `);
     
-    console.log('按网站类型分组的统计：');
+    console.log('\n按网站类型分组的统计：');
     console.table(groupResult);
     
   } catch (err) {
