@@ -1,19 +1,16 @@
 {
   "watch": [
-    "src/**/*.js",
-    "web-server.js",
-    "cli.js",
+    "app/**/*.js",
+    "app/**/*.html",
     "public/**/*.js",
-    "public/**/*.html",
-    "public/**/*.css"
+    "public/**/*.css",
+    "app.js"
   ],
   "ignore": [
     "node_modules/**/*",
     "uploads/**/*",
-    "sources/**/*.csv",
     "*.csv",
-    "tests/**/*",
-    "docs/**/*"
+    "*.log"
   ],
   "ext": "js,html,css,json",
   "delay": 1000,
