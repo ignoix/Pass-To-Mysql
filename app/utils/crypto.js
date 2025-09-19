@@ -1,4 +1,5 @@
 const CryptoJS = require('crypto-js');
+const EnvUtils = require('./env');
 
 /**
  * 加密工具类
@@ -18,7 +19,9 @@ class Crypto {
             const encrypted = CryptoJS.AES.encrypt(password, this.secretKey).toString();
             return encrypted;
         } catch (error) {
-            console.error('加密失败:', error.message);
+            EnvUtils.silentInProduction(() => {
+                console.error('加密失败:', error.message);
+            });
             throw new Error('密码加密失败');
         }
     }
@@ -39,7 +42,9 @@ class Crypto {
             
             return password;
         } catch (error) {
-            console.error('解密失败:', error.message);
+            EnvUtils.silentInProduction(() => {
+                console.error('解密失败:', error.message);
+            });
             throw new Error('密码解密失败');
         }
     }

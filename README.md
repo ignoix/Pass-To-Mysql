@@ -32,9 +32,10 @@ pass-to-mysql/
 │   │   ├── schema.js     # 数据库结构
 │   │   └── queries.js    # 查询语句
 │   ├── utils/            # 工具类
-│   │   ├── crypto.js     # 加密工具
-│   │   ├── database.js   # 数据库工具
-│   │   └── fileHandler.js # 文件处理工具
+│   │   ├── index.js     # 工具类统一导出
+│   │   ├── env.js       # 环境工具类
+│   │   ├── crypto.js    # 加密工具类
+│   │   └── database.js  # 数据库工具类
 │   └── views/            # 视图模板
 │       └── index.html    # 主页面
 ├── public/               # 静态资源
@@ -66,22 +67,36 @@ npm install
 
 ### 3. 配置环境变量
 
-创建 `.env` 文件：
+复制环境变量示例文件：
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件，配置以下变量：
 
 ```env
 # 数据库配置
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_password_here
+DB_PASSWORD=your_mysql_password
 DB_NAME=pass_manager
 
-# 加密密钥
-CRYPTO_KEY=your_32_character_encryption_key_here
+# 加密密钥 (建议使用32位以上随机字符串)
+CRYPTO_KEY=your_secret_encryption_key_here_32_chars_minimum
 
-# 服务器配置
+# 应用配置
 PORT=3000
 NODE_ENV=development
+
+# 文件上传配置
+UPLOAD_DIR=uploads
+MAX_FILE_SIZE=10485760
 ```
+
+**重要提示：**
+- 请确保 `CRYPTO_KEY` 至少32位字符，用于密码加密
+- 数据库密码请替换为您的实际MySQL密码
+- 不要将 `.env` 文件提交到版本控制系统
 
 ### 4. 启动应用
 
@@ -115,6 +130,25 @@ npm run dev
 - 查看明文需要输入正确的解密密钥
 - 支持复制密文和明文密码
 - 密钥错误时显示友好提示
+
+### 工具类使用
+
+项目提供了统一的工具类导出，使用方式：
+
+```javascript
+// 统一导入所有工具类
+const { EnvUtils, Crypto, Database } = require('./app/utils');
+
+// 或者单独导入
+const { EnvUtils } = require('./app/utils');
+const { Crypto } = require('./app/utils');
+const { Database } = require('./app/utils');
+```
+
+**工具类说明：**
+- `EnvUtils`: 环境判断工具，支持生产/开发环境区分
+- `Crypto`: 密码加密解密工具
+- `Database`: 数据库操作工具
 
 ### 文件导入
 

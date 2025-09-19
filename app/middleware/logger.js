@@ -1,3 +1,5 @@
+const { EnvUtils } = require('../utils');
+
 /**
  * 请求日志中间件
  */
@@ -6,6 +8,8 @@ module.exports = () => {
         const start = Date.now();
         await next();
         const ms = Date.now() - start;
-        console.log(`${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
+        EnvUtils.silentInProduction(() => {
+            console.log(`${ctx.method} ${ctx.url} - ${ctx.status} - ${ms}ms`);
+        });
     };
 };

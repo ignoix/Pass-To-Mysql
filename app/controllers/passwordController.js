@@ -209,7 +209,7 @@ class PasswordController {
                 return;
             }
 
-            const Crypto = require('../utils/crypto');
+            const { Crypto } = require('../utils');
             const crypto = new Crypto(key);
             
             try {

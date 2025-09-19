@@ -11,6 +11,9 @@ const logger = require('./app/middleware/logger');
 // 导入路由
 const passwordRoutes = require('./app/routes/passwordRoutes');
 
+// 导入工具类
+const { EnvUtils, Database } = require('./app/utils');
+
 const app = new Koa();
 
 // 中间件
@@ -34,11 +37,38 @@ app.use(async (ctx) => {
     }
 });
 
+// 初始化数据库
+async function initializeDatabase() {
+    try {
+        const db = new Database();
+        await db.ensureTable();
+        EnvUtils.silentInProduction(() => {
+            console.log('✅ 数据库初始化完成');
+        });
+    } catch (error) {
+        console.error('❌ 数据库初始化失败:', error.message);
+        process.exit(1);
+    }
+}
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 密码管理系统启动成功！`);
-    console.log(`📱 访问地址: http://localhost:${PORT}`);
-    console.log(`🔧 环境: ${process.env.NODE_ENV || 'development'}`);
+
+// 启动应用
+async function startApp() {
+    await initializeDatabase();
+    
+    app.listen(PORT, () => {
+        EnvUtils.silentInProduction(() => {
+            console.log(`🚀 密码管理系统启动成功！`);
+            console.log(`📱 访问地址: http://localhost:${PORT}`);
+            console.log(`🔧 环境: ${process.env.NODE_ENV || 'development'}`);
+        });
+    });
+}
+
+startApp().catch(error => {
+    console.error('❌ 应用启动失败:', error.message);
+    process.exit(1);
 });
 
 module.exports = app;

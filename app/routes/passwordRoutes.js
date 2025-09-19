@@ -1,15 +1,16 @@
 const Router = require('koa-router');
 const multer = require('@koa/multer');
 const PasswordController = require('../controllers/passwordController');
+const { appConfig } = require('../config/database');
 
 const router = new Router();
 const passwordController = new PasswordController();
 
 // 配置multer用于文件上传
 const upload = multer({
-    dest: 'uploads/',
+    dest: appConfig.uploadDir + '/',
     limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB限制
+        fileSize: appConfig.maxFileSize
     },
     fileFilter: (req, file, cb) => {
         if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {

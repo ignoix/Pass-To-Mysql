@@ -1,4 +1,4 @@
-const Database = require('../utils/database');
+const { Database, EnvUtils } = require('../utils');
 
 /**
  * 密码模型
@@ -110,7 +110,9 @@ class Password {
                                 insertedCount++;
                             }
                         } catch (error) {
-                            console.error('处理记录失败:', error);
+                            EnvUtils.silentInProduction(() => {
+                                console.error('处理记录失败:', error);
+                            });
                             skippedCount++;
                         }
                     }

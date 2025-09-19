@@ -25,22 +25,16 @@ class PasswordManager {
         
         if (searchBtn) {
             searchBtn.addEventListener('click', () => {
-                console.log('搜索按钮被点击');
                 this.search();
             });
-        } else {
-            console.error('搜索按钮未找到');
         }
 
         if (searchInput) {
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    console.log('搜索输入框回车键被按下');
                     this.search();
                 }
             });
-        } else {
-            console.error('搜索输入框未找到');
         }
 
         // 添加密码
@@ -107,7 +101,6 @@ class PasswordManager {
         try {
             this.currentPage = page;
             const url = `/api/passwords?page=${page}&limit=${this.pageSize}&search=${encodeURIComponent(this.currentSearch)}`;
-            console.log('请求URL:', url);
             const response = await fetch(url);
             const data = await response.json();
 
@@ -135,7 +128,6 @@ class PasswordManager {
                 this.updateStats(data.data);
             }
         } catch (error) {
-            console.error('加载统计信息失败:', error);
         }
     }
 
@@ -281,7 +273,6 @@ class PasswordManager {
 
     search() {
         this.currentSearch = document.getElementById('searchInput').value.trim();
-        console.log('搜索关键词:', this.currentSearch);
         this.loadPasswords(1);
     }
 
@@ -508,7 +499,6 @@ class PasswordManager {
                 this.showError(result.message || '解密失败');
             }
         } catch (error) {
-            console.error('解密错误:', error);
             this.showError('解密失败，请检查网络连接');
         }
     }
@@ -569,7 +559,6 @@ class PasswordManager {
             navigator.clipboard.writeText(textToCopy).then(() => {
                 this.showSuccess(successMessage);
             }).catch((error) => {
-                console.error('Clipboard write failed:', error);
                 this.showError('复制失败');
             });
         } else {
