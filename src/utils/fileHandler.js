@@ -70,7 +70,9 @@ class FileHandler {
       throw new Error(`文件不存在: ${filePath}`);
     }
     
-    if (!filePath.endsWith('.csv')) {
+    // 检查文件扩展名或MIME类型
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext !== '.csv' && !filePath.includes('uploads/')) {
       throw new Error(`文件格式错误，需要CSV文件: ${filePath}`);
     }
     

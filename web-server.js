@@ -3,10 +3,27 @@ const Router = require('koa-router');
 const bodyParser = require('koa-bodyparser');
 const serve = require('koa-static');
 const path = require('path');
+const multer = require('@koa/multer');
+const fs = require('fs');
 const PasswordManager = require('./src/index');
 
 const app = new Koa();
 const router = new Router();
+
+// 配置multer用于文件上传
+const upload = multer({
+  dest: 'uploads/',
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB限制
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('只支持CSV文件'), false);
+    }
+  }
+});
 
 // 中间件
 // 手动CORS中间件
@@ -182,6 +199,47 @@ router.get('/api/stats', async (ctx) => {
       data: stats
     };
   } catch (error) {
+    ctx.status = 500;
+    ctx.body = {
+      success: false,
+      message: error.message
+    };
+  }
+});
+
+// 导入密码API
+router.post('/api/import', upload.single('file'), async (ctx) => {
+  try {
+    if (!ctx.request.file) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        message: '请选择要导入的CSV文件'
+      };
+      return;
+    }
+
+    const { source = 'Chrome' } = ctx.request.body;
+    const filePath = ctx.request.file.path;
+    const fileName = ctx.request.file.originalname;
+
+    // 调用导入功能
+    const result = await passwordManager.importPasswords(filePath, source);
+
+    // 删除临时文件
+    fs.unlinkSync(filePath);
+
+    ctx.body = {
+      success: true,
+      data: result,
+      message: `导入完成！新增 ${result.inserted} 条，更新 ${result.updated} 条，跳过 ${result.skipped} 条`
+    };
+  } catch (error) {
+    // 清理临时文件
+    if (ctx.request.file && fs.existsSync(ctx.request.file.path)) {
+      fs.unlinkSync(ctx.request.file.path);
+    }
+    
     ctx.status = 500;
     ctx.body = {
       success: false,

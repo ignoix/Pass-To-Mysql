@@ -153,3 +153,6 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# 上传文件目录
+uploads/

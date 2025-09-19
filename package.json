@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node cli.js import",
     "web": "node web-server.js",
-    "dev": "node web-server.js",
+    "dev": "nodemon web-server.js",
     "import": "node cli.js import",
     "import-file": "node cli.js import",
     "query": "node cli.js query",
@@ -23,6 +23,7 @@
     "legacy:decrypt": "node decrypt.js"
   },
   "dependencies": {
+    "@koa/multer": "^4.0.0",
     "csv-parser": "^3.0.0",
     "dotenv": "^17.2.2",
     "ejs": "^3.1.10",
@@ -32,8 +33,12 @@
     "koa-router": "^14.0.0",
     "koa-static": "^5.0.0",
     "koa-views": "^8.1.0",
+    "multer": "^2.0.2",
     "mysql2": "^3.6.0"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
 }

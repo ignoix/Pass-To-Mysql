@@ -195,18 +195,35 @@
             color: white;
         }
 
+        .btn-warning-custom {
+            background: linear-gradient(135deg, var(--warning-color), #d97706);
+            color: white;
+        }
+
+        .btn-warning-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            color: white;
+        }
+
         .table-container {
             background: white;
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: var(--shadow);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border: 1px solid var(--border-color);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .table-container:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         .table-header {
             background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 1.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            border-radius: 16px 16px 0 0;
         }
 
         .table-header h5 {
@@ -228,38 +245,63 @@
         }
 
         .table th {
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
             border: none;
-            padding: 0.75rem 0.5rem;
-            font-weight: 600;
+            padding: 1rem 0.75rem;
+            font-weight: 700;
             color: var(--dark-color);
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             white-space: nowrap;
+            border-bottom: 2px solid var(--primary-color);
         }
 
         .table td {
             border: none;
-            padding: 0.75rem 0.5rem;
+            padding: 1rem 0.75rem;
             vertical-align: middle;
             border-bottom: 1px solid #f1f5f9;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            transition: background-color 0.2s ease;
         }
 
-        .table td:nth-child(1) { max-width: 150px; } /* 网站名称 */
-        .table td:nth-child(2) { max-width: 250px; } /* URL */
-        .table td:nth-child(3) { max-width: 120px; } /* 用户名 */
-        .table td:nth-child(4) { max-width: 150px; } /* 密码 */
-        .table td:nth-child(5) { max-width: 80px; }  /* 来源 */
-        .table td:nth-child(6) { max-width: 120px; } /* 备注 */
-        .table td:nth-child(7) { max-width: 100px; } /* 操作 */
+        .table td:nth-child(1) { max-width: 200px; } /* 网站名称 */
+        .table td:nth-child(2) { max-width: 200px; } /* 用户名 */
+        .table td:nth-child(3) { max-width: 150px; } /* 密码 */
+        .table td:nth-child(4) { max-width: 80px; }  /* 来源 */
+        .table td:nth-child(5) { max-width: 150px; } /* 备注 */
+        .table td:nth-child(6) { max-width: 100px; } /* 操作 */
 
         .table tbody tr:hover {
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
+
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .site-name-link {
+            transition: all 0.3s ease;
+        }
+
+        .site-name-link:hover {
+            color: var(--primary-color) !important;
+            text-decoration: underline !important;
+        }
+
+        /* 来源标签颜色优化 */
+        .badge-custom.bg-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6) !important; }
+        .badge-custom.bg-warning { background: linear-gradient(135deg, #f59e0b, #d97706) !important; }
+        .badge-custom.bg-info { background: linear-gradient(135deg, #06b6d4, #0891b2) !important; }
+        .badge-custom.bg-success { background: linear-gradient(135deg, #10b981, #059669) !important; }
+        .badge-custom.bg-secondary { background: linear-gradient(135deg, #6b7280, #4b5563) !important; }
+        .badge-custom.bg-dark { background: linear-gradient(135deg, #374151, #1f2937) !important; }
+        .badge-custom.bg-light { background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important; color: #374151 !important; }
 
         .password-field {
             font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
@@ -271,15 +313,42 @@
         }
 
         .btn-action {
-            padding: 0.375rem;
-            border-radius: 6px;
-            margin: 0 0.125rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            margin: 0 0.25rem;
             transition: all 0.3s ease;
             font-size: 0.75rem;
+            border: none;
+            min-width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-action:hover {
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-action.edit-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+
+        .btn-action.edit-btn:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            color: white;
+        }
+
+        .btn-action.delete-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-action.delete-btn:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
         }
 
         .pagination-custom .page-link {
@@ -487,6 +556,9 @@
                         <button class="btn btn-success-custom btn-custom me-2" id="addPasswordBtn">
                             <i class="bi bi-plus-circle me-1"></i>添加密码
                         </button>
+                        <button class="btn btn-warning-custom btn-custom me-2" id="importBtn">
+                            <i class="bi bi-upload me-1"></i>导入
+                        </button>
                         <button class="btn btn-info-custom btn-custom" id="refreshBtn">
                             <i class="bi bi-arrow-clockwise me-1"></i>刷新
                         </button>
@@ -507,7 +579,6 @@
                         <thead>
                             <tr>
                                 <th>网站名称</th>
-                                <th>URL</th>
                                 <th>用户名</th>
                                 <th>密码</th>
                                 <th>来源</th>
@@ -517,7 +588,7 @@
                         </thead>
                         <tbody id="passwordTableBody">
                             <tr>
-                                <td colspan="7" class="empty-state">
+                                <td colspan="6" class="empty-state">
                                     <i class="bi bi-hourglass-split"></i>
                                     <div>加载中...</div>
                                 </td>
@@ -589,6 +660,60 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-custom" data-bs-dismiss="modal">取消</button>
                     <button type="button" class="btn btn-primary-custom btn-custom" id="savePasswordBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导入密码模态框 -->
+    <div class="modal fade" id="importModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-upload me-2"></i>导入密码
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="importFile" class="form-label">选择CSV文件 *</label>
+                            <input type="file" class="form-control" id="importFile" accept=".csv" required>
+                            <div class="form-text">支持Chrome、Firefox、Edge等浏览器导出的CSV格式文件</div>
+                        </div>
+                        <div class="col-12">
+                            <label for="importSource" class="form-label">来源标识</label>
+                            <select class="form-select" id="importSource">
+                                <option value="Chrome">Chrome</option>
+                                <option value="Firefox">Firefox</option>
+                                <option value="Edge">Edge</option>
+                                <option value="Safari">Safari</option>
+                                <option value="Other">其他</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-info alert-custom">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-info-circle me-2 mt-1"></i>
+                                    <div>
+                                        <strong>导入说明：</strong>
+                                        <ul class="mb-0 mt-2">
+                                            <li>CSV文件应包含：name, url, username, password, note 列</li>
+                                            <li>重复记录将自动更新，新记录将添加</li>
+                                            <li>密码将使用AES加密存储</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-custom" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-warning-custom btn-custom" id="confirmImportBtn">
+                        <i class="bi bi-upload me-1"></i>开始导入
+                    </button>
                 </div>
             </div>
         </div>

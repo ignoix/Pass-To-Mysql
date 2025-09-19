@@ -12,7 +12,7 @@ class PasswordService {
   /**
    * 导入单个文件
    */
-  async importFile(filePath) {
+  async importFile(filePath, customSource = null) {
     try {
       // 验证文件
       FileHandler.validateCsvFile(filePath);
@@ -33,8 +33,11 @@ class PasswordService {
       for (const row of rows) {
         const { name, url, username, password, note, from } = row;
         
+        // 使用自定义来源或CSV中的来源
+        const finalSource = customSource || from || fileName;
+        
         // 检查记录是否已存在
-        const existing = await this.db.findExisting(name, url, username, from);
+        const existing = await this.db.findExisting(name, url, username, finalSource);
         
         if (existing) {
           // 记录已存在，检查密码是否相同
@@ -51,7 +54,7 @@ class PasswordService {
           }
         } else {
           // 记录不存在，插入新记录
-          await this.db.insert(name, url, username, password, note, from);
+          await this.db.insert(name, url, username, password, note, finalSource);
           insertedCount++;
         }
       }

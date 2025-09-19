@@ -1,0 +1,24 @@
+{
+  "watch": [
+    "src/**/*.js",
+    "web-server.js",
+    "cli.js",
+    "public/**/*.js",
+    "public/**/*.html",
+    "public/**/*.css"
+  ],
+  "ignore": [
+    "node_modules/**/*",
+    "uploads/**/*",
+    "sources/**/*.csv",
+    "*.csv",
+    "tests/**/*",
+    "docs/**/*"
+  ],
+  "ext": "js,html,css,json",
+  "delay": 1000,
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "verbose": true
+}

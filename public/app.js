@@ -20,19 +20,42 @@ class PasswordManager {
 
     bindEvents() {
         // 搜索功能
-        document.getElementById('searchBtn').addEventListener('click', () => {
-            this.search();
-        });
-
-        document.getElementById('searchInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+        const searchBtn = document.getElementById('searchBtn');
+        const searchInput = document.getElementById('searchInput');
+        
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                console.log('搜索按钮被点击');
                 this.search();
-            }
-        });
+            });
+        } else {
+            console.error('搜索按钮未找到');
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    console.log('搜索输入框回车键被按下');
+                    this.search();
+                }
+            });
+        } else {
+            console.error('搜索输入框未找到');
+        }
 
         // 添加密码
         document.getElementById('addPasswordBtn').addEventListener('click', () => {
             this.showAddModal();
+        });
+
+        // 导入密码
+        document.getElementById('importBtn').addEventListener('click', () => {
+            this.showImportModal();
+        });
+
+        // 确认导入
+        document.getElementById('confirmImportBtn').addEventListener('click', () => {
+            this.importPasswords();
         });
 
         // 刷新
@@ -71,7 +94,9 @@ class PasswordManager {
     async loadPasswords(page = 1) {
         try {
             this.currentPage = page;
-            const response = await fetch(`/api/passwords?page=${page}&limit=${this.pageSize}&search=${encodeURIComponent(this.currentSearch)}`);
+            const url = `/api/passwords?page=${page}&limit=${this.pageSize}&search=${encodeURIComponent(this.currentSearch)}`;
+            console.log('请求URL:', url);
+            const response = await fetch(url);
             const data = await response.json();
 
             if (data.success) {
@@ -123,7 +148,7 @@ class PasswordManager {
         if (this.passwords.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="empty-state">
+                    <td colspan="6" class="empty-state">
                         <i class="bi bi-inbox"></i>
                         <div>暂无数据</div>
                     </td>
@@ -137,19 +162,16 @@ class PasswordManager {
                 <td>
                     <div class="d-flex align-items-center">
                         <i class="bi bi-globe me-2 text-primary"></i>
-                        <strong>${this.escapeHtml(password.name)}</strong>
+                        <a href="${this.escapeHtml(password.url)}" target="_blank" class="text-decoration-none fw-bold text-dark site-name-link" title="${this.escapeHtml(password.url)}">
+                            ${this.getDisplayName(password.name)}
+                            <i class="bi bi-box-arrow-up-right ms-1"></i>
+                        </a>
                     </div>
-                </td>
-                <td>
-                    <a href="${this.escapeHtml(password.url)}" target="_blank" class="text-decoration-none text-primary">
-                        ${this.escapeHtml(password.url)}
-                        <i class="bi bi-box-arrow-up-right ms-1"></i>
-                    </a>
                 </td>
                 <td>
                     <div class="d-flex align-items-center">
                         <i class="bi bi-person me-2 text-muted"></i>
-                        ${this.escapeHtml(password.username)}
+                        <span class="fw-medium">${this.escapeHtml(password.username)}</span>
                     </div>
                 </td>
                 <td>
@@ -164,17 +186,17 @@ class PasswordManager {
                     </div>
                 </td>
                 <td>
-                    <span class="badge badge-custom bg-primary">${this.escapeHtml(password.from)}</span>
+                    <span class="badge badge-custom ${this.getSourceBadgeClass(password.from)}">${this.escapeHtml(password.from)}</span>
                 </td>
                 <td>
                     ${password.note ? `<span class="text-muted">${this.escapeHtml(password.note)}</span>` : '<span class="text-muted">-</span>'}
                 </td>
                 <td>
-                    <div class="btn-group" role="group">
-                        <button class="btn btn-outline-primary edit-btn btn-action" data-id="${password.id}" title="编辑">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn edit-btn btn-action" data-id="${password.id}" title="编辑密码">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-outline-danger delete-btn btn-action" data-id="${password.id}" title="删除">
+                        <button class="btn delete-btn btn-action" data-id="${password.id}" title="删除密码">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -244,6 +266,7 @@ class PasswordManager {
 
     search() {
         this.currentSearch = document.getElementById('searchInput').value.trim();
+        console.log('搜索关键词:', this.currentSearch);
         this.loadPasswords(1);
     }
 
@@ -252,6 +275,56 @@ class PasswordManager {
         document.getElementById('passwordForm').reset();
         document.getElementById('passwordId').value = '';
         new bootstrap.Modal(document.getElementById('passwordModal')).show();
+    }
+
+    showImportModal() {
+        document.getElementById('importFile').value = '';
+        document.getElementById('importSource').value = 'Chrome';
+        new bootstrap.Modal(document.getElementById('importModal')).show();
+    }
+
+    async importPasswords() {
+        const fileInput = document.getElementById('importFile');
+        const sourceSelect = document.getElementById('importSource');
+        
+        if (!fileInput.files[0]) {
+            this.showError('请选择要导入的CSV文件');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('source', sourceSelect.value);
+
+        // 显示加载状态
+        const importBtn = document.getElementById('confirmImportBtn');
+        const originalText = importBtn.innerHTML;
+        importBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>导入中...';
+        importBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/import', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showSuccess(data.message);
+                bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();
+                this.loadPasswords(this.currentPage);
+                this.loadStats();
+            } else {
+                this.showError(data.message);
+            }
+        } catch (error) {
+            this.showError('导入失败: ' + error.message);
+        } finally {
+            // 恢复按钮状态
+            importBtn.innerHTML = originalText;
+            importBtn.disabled = false;
+        }
     }
 
     async editPassword(id) {
@@ -403,6 +476,34 @@ class PasswordManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    getDisplayName(name) {
+        if (!name.includes('.')) {
+            return this.escapeHtml(name);
+        }
+        
+        const parts = name.split('.');
+        if (parts.length >= 2) {
+            // 取倒数第二个部分
+            return this.escapeHtml(parts[parts.length - 2]);
+        }
+        
+        return this.escapeHtml(name);
+    }
+
+    getSourceBadgeClass(source) {
+        const sourceMap = {
+            'Chrome': 'bg-primary',
+            'Firefox': 'bg-warning',
+            'Edge': 'bg-info',
+            'Safari': 'bg-success',
+            'web': 'bg-secondary',
+            'Test': 'bg-dark',
+            'Other': 'bg-light text-dark'
+        };
+        
+        return sourceMap[source] || 'bg-primary';
     }
 }
 

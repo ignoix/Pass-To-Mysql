@@ -29,6 +29,24 @@ class PasswordManager {
   }
 
   /**
+   * 导入密码文件（Web API用）
+   */
+  async importPasswords(filePath, source = 'Chrome') {
+    try {
+      const result = await this.service.importFile(filePath, source);
+      return {
+        inserted: result.insertedCount,
+        updated: result.updatedCount,
+        skipped: result.skippedCount,
+        fileName: result.fileName
+      };
+    } catch (error) {
+      console.error('❌ 导入失败:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * 批量导入所有文件
    */
   async importAll() {
