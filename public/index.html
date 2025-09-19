@@ -751,6 +751,41 @@
         </div>
     </div>
 
+    <!-- 密钥输入模态框 -->
+    <div class="modal fade" id="keyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-key me-2"></i>输入解密密钥
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-3">请输入解密密钥以查看密码明文：</p>
+                    <div class="mb-3">
+                        <label for="decryptKey" class="form-label">解密密钥</label>
+                        <input type="password" class="form-control" id="decryptKey" placeholder="请输入解密密钥">
+                    </div>
+                    <div class="alert alert-info alert-custom">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <div>
+                                <strong>提示：</strong>密钥与导入时使用的密钥相同
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-custom" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary btn-custom" id="confirmDecryptBtn">
+                        <i class="bi bi-unlock me-1"></i>解密
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
 </body>

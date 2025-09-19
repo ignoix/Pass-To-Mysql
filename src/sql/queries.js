@@ -6,8 +6,8 @@ const QUERIES = {
    * 查找现有记录
    */
   FIND_EXISTING: `
-    SELECT id, password_encrypted 
-    FROM passwords 
+    SELECT id, password 
+    FROM pass 
     WHERE name = ? AND url = ? AND username = ? AND \`from\` = ?
   `,
 
@@ -15,8 +15,8 @@ const QUERIES = {
    * 比较密码
    */
   COMPARE_PASSWORD: `
-    SELECT AES_DECRYPT(password_encrypted, ?) as decrypted_password 
-    FROM passwords 
+    SELECT password 
+    FROM pass 
     WHERE id = ?
   `,
 
@@ -24,16 +24,16 @@ const QUERIES = {
    * 插入新记录
    */
   INSERT_RECORD: `
-    INSERT INTO passwords (name, url, username, password_encrypted, note, \`from\`) 
-    VALUES (?, ?, ?, AES_ENCRYPT(?, ?), ?, ?)
+    INSERT INTO pass (name, url, username, password, note, \`from\`) 
+    VALUES (?, ?, ?, ?, ?, ?)
   `,
 
   /**
    * 更新记录
    */
   UPDATE_RECORD: `
-    UPDATE passwords 
-    SET password_encrypted = AES_ENCRYPT(?, ?), note = ?, updated_at = CURRENT_TIMESTAMP 
+    UPDATE pass 
+    SET password = ?, note = ?, updated_at = CURRENT_TIMESTAMP 
     WHERE id = ?
   `,
 
@@ -46,12 +46,12 @@ const QUERIES = {
       name,
       url,
       username,
-      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
+      password,
       note,
       \`from\`,
       created_at,
       updated_at
-    FROM passwords 
+    FROM pass 
     ORDER BY \`from\`, name
   `,
 
@@ -64,12 +64,12 @@ const QUERIES = {
       name,
       url,
       username,
-      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
+      password,
       note,
       \`from\`,
       created_at,
       updated_at
-    FROM passwords 
+    FROM pass 
     WHERE name LIKE ? OR username LIKE ? OR url LIKE ? OR \`from\` LIKE ?
     ORDER BY \`from\`, name
   `,
@@ -77,7 +77,7 @@ const QUERIES = {
   /**
    * 统计总记录数
    */
-  COUNT_TOTAL: `SELECT COUNT(*) as total FROM passwords`,
+  COUNT_TOTAL: `SELECT COUNT(*) as total FROM pass`,
 
   /**
    * 按来源统计
@@ -86,7 +86,7 @@ const QUERIES = {
     SELECT 
       \`from\` as source,
       COUNT(*) as count
-    FROM passwords 
+    FROM pass 
     GROUP BY \`from\`
     ORDER BY count DESC
   `,
@@ -110,7 +110,7 @@ const QUERIES = {
         ELSE '其他'
       END as category,
       COUNT(*) as count
-    FROM passwords 
+    FROM pass 
     GROUP BY category
     ORDER BY count DESC
   `,
@@ -122,7 +122,7 @@ const QUERIES = {
     SELECT 
       SUBSTRING_INDEX(username, '@', -1) as email_domain,
       COUNT(*) as count
-    FROM passwords 
+    FROM pass 
     WHERE username LIKE '%@%'
     GROUP BY email_domain
     ORDER BY count DESC
@@ -136,7 +136,7 @@ const QUERIES = {
       name, 
       COUNT(*) as duplicate_count,
       GROUP_CONCAT(username) as usernames
-    FROM passwords 
+    FROM pass 
     GROUP BY name 
     HAVING COUNT(*) > 1
     ORDER BY duplicate_count DESC
@@ -151,8 +151,8 @@ const QUERIES = {
       name, 
       url, 
       username, 
-      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password
-    FROM passwords 
+      password
+    FROM pass 
     WHERE note IS NULL OR note = ''
   `,
 
@@ -165,12 +165,12 @@ const QUERIES = {
       name, 
       url, 
       username, 
-      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
+      password,
       note,
       \`from\`,
       created_at,
       updated_at
-    FROM passwords 
+    FROM pass 
     ORDER BY created_at DESC 
     LIMIT ?
   `,
@@ -184,10 +184,10 @@ const QUERIES = {
       name, 
       url, 
       username, 
-      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
-      LENGTH(CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR)) as password_length
-    FROM passwords 
-    WHERE LENGTH(CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR)) < ?
+      password,
+      LENGTH(password) as password_length
+    FROM pass 
+    WHERE LENGTH(password) < ?
   `,
 
   /**
@@ -199,10 +199,10 @@ const QUERIES = {
       name, 
       url, 
       username, 
-      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password
-    FROM passwords 
-    WHERE CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) REGEXP '[0-9]'
-      AND CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) REGEXP '[!@#$%^&*()_+=\\[\\]{}|;:,.<>?]'
+      password
+    FROM pass 
+    WHERE password REGEXP '[0-9]'
+      AND password REGEXP '[!@#$%^&*()_+=\\[\\]{}|;:,.<>?]'
   `,
 
   /**
@@ -211,8 +211,8 @@ const QUERIES = {
   VALIDATE_ENCRYPTION_KEY: `
     SELECT 
       name,
-      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password
-    FROM passwords 
+      password
+    FROM pass 
     LIMIT 1
   `,
 
@@ -225,12 +225,12 @@ const QUERIES = {
       name,
       url,
       username,
-      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
+      password,
       note,
       \`from\`,
       created_at,
       updated_at
-    FROM passwords 
+    FROM pass 
     WHERE id = ?
   `,
 
@@ -243,12 +243,12 @@ const QUERIES = {
       name,
       url,
       username,
-      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
+      password,
       note,
       \`from\`,
       created_at,
       updated_at
-    FROM passwords 
+    FROM pass 
     ORDER BY \`from\`, name
     LIMIT ? OFFSET ?
   `,
@@ -262,12 +262,12 @@ const QUERIES = {
       name,
       url,
       username,
-      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
+      password,
       note,
       \`from\`,
       created_at,
       updated_at
-    FROM passwords 
+    FROM pass 
     WHERE name LIKE ? OR username LIKE ? OR url LIKE ? OR \`from\` LIKE ?
     ORDER BY \`from\`, name
     LIMIT ? OFFSET ?
@@ -278,7 +278,7 @@ const QUERIES = {
    */
   COUNT_SEARCH_RESULTS: `
     SELECT COUNT(*) as total 
-    FROM passwords 
+    FROM pass 
     WHERE name LIKE ? OR username LIKE ? OR url LIKE ? OR \`from\` LIKE ?
   `,
 
@@ -287,7 +287,7 @@ const QUERIES = {
    */
   FIND_BY_ID: `
     SELECT id, name, url, username, note, \`from\`, created_at, updated_at
-    FROM passwords 
+    FROM pass 
     WHERE id = ?
   `,
 
@@ -295,8 +295,8 @@ const QUERIES = {
    * 根据ID更新记录
    */
   UPDATE_RECORD_BY_ID: `
-    UPDATE passwords 
-    SET name = ?, url = ?, username = ?, password_encrypted = AES_ENCRYPT(?, ?), 
+    UPDATE pass 
+    SET name = ?, url = ?, username = ?, password = ?, 
         note = ?, \`from\` = ?, updated_at = CURRENT_TIMESTAMP 
     WHERE id = ?
   `,
@@ -305,7 +305,7 @@ const QUERIES = {
    * 根据ID删除记录
    */
   DELETE_RECORD_BY_ID: `
-    DELETE FROM passwords WHERE id = ?
+    DELETE FROM pass WHERE id = ?
   `
 };
 

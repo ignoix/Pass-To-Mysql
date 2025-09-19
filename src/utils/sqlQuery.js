@@ -1,6 +1,6 @@
 const Database = require('./database');
 const { QUERIES } = require('../sql');
-const { encryptionConfig } = require('../config/database');
+const { cryptoKey } = require('../config/database');
 
 /**
  * SQL查询工具类
@@ -25,7 +25,7 @@ class SqlQuery {
    */
   async findEmptyNotes() {
     const connection = await this.db.connect();
-    const [rows] = await connection.query(QUERIES.FIND_EMPTY_NOTES, [encryptionConfig.key]);
+    const [rows] = await connection.query(QUERIES.FIND_EMPTY_NOTES);
     return rows;
   }
 
@@ -34,7 +34,7 @@ class SqlQuery {
    */
   async findRecentRecords(limit = 10) {
     const connection = await this.db.connect();
-    const [rows] = await connection.query(QUERIES.FIND_RECENT_RECORDS, [encryptionConfig.key, limit]);
+    const [rows] = await connection.query(QUERIES.FIND_RECENT_RECORDS, [limit]);
     return rows;
   }
 
@@ -43,12 +43,7 @@ class SqlQuery {
    */
   async findPasswordsByLength(maxLength = 8) {
     const connection = await this.db.connect();
-    const [rows] = await connection.query(QUERIES.FIND_PASSWORDS_BY_LENGTH, [
-      encryptionConfig.key, 
-      encryptionConfig.key, 
-      encryptionConfig.key, 
-      maxLength
-    ]);
+    const [rows] = await connection.query(QUERIES.FIND_PASSWORDS_BY_LENGTH, [maxLength]);
     return rows;
   }
 
@@ -57,11 +52,7 @@ class SqlQuery {
    */
   async findPasswordsWithSpecialChars() {
     const connection = await this.db.connect();
-    const [rows] = await connection.query(QUERIES.FIND_PASSWORDS_WITH_SPECIAL_CHARS, [
-      encryptionConfig.key,
-      encryptionConfig.key,
-      encryptionConfig.key
-    ]);
+    const [rows] = await connection.query(QUERIES.FIND_PASSWORDS_WITH_SPECIAL_CHARS);
     return rows;
   }
 
@@ -79,7 +70,7 @@ class SqlQuery {
    */
   async validateEncryptionKey() {
     const connection = await this.db.connect();
-    const [rows] = await connection.query(QUERIES.VALIDATE_ENCRYPTION_KEY, [encryptionConfig.key]);
+    const [rows] = await connection.query(QUERIES.VALIDATE_ENCRYPTION_KEY);
     return rows.length > 0 && rows[0].password !== null;
   }
 

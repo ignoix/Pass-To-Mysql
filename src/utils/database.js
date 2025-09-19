@@ -1,6 +1,7 @@
 const mysql = require('mysql2/promise');
-const { dbConfig, encryptionConfig, appConfig } = require('../config/database');
+const { dbConfig, cryptoKey, appConfig } = require('../config/database');
 const { SCHEMA, QUERIES } = require('../sql');
+const Crypto = require('./crypto');
 
 /**
  * 数据库连接工具类
@@ -8,6 +9,7 @@ const { SCHEMA, QUERIES } = require('../sql');
 class Database {
   constructor() {
     this.connection = null;
+    this.crypto = new Crypto(cryptoKey);
   }
 
   /**
@@ -56,10 +58,11 @@ class Database {
    */
   async comparePassword(existingId, password) {
     const connection = await this.connect();
-    const [rows] = await connection.query(QUERIES.COMPARE_PASSWORD, [encryptionConfig.key, existingId]);
+    const [rows] = await connection.query(QUERIES.COMPARE_PASSWORD, [existingId]);
     
-    if (rows[0] && rows[0].decrypted_password) {
-      return rows[0].decrypted_password.toString() === password;
+    if (rows[0] && rows[0].password) {
+      const decryptedPassword = this.crypto.decrypt(rows[0].password);
+      return decryptedPassword === password;
     }
     return false;
   }
@@ -69,7 +72,8 @@ class Database {
    */
   async insert(name, url, username, password, note, from) {
     const connection = await this.connect();
-    await connection.query(QUERIES.INSERT_RECORD, [name, url, username, password, encryptionConfig.key, note, from]);
+    const encryptedPassword = this.crypto.encrypt(password);
+    await connection.query(QUERIES.INSERT_RECORD, [name, url, username, encryptedPassword, note, from]);
   }
 
   /**
@@ -77,7 +81,8 @@ class Database {
    */
   async update(existingId, password, note) {
     const connection = await this.connect();
-    await connection.query(QUERIES.UPDATE_RECORD, [password, encryptionConfig.key, note, existingId]);
+    const encryptedPassword = this.crypto.encrypt(password);
+    await connection.query(QUERIES.UPDATE_RECORD, [encryptedPassword, note, existingId]);
   }
 
   /**
@@ -91,20 +96,22 @@ class Database {
     if (id) {
       // 根据ID查询单条记录
       query = QUERIES.SELECT_PASSWORD_BY_ID;
-      params = [encryptionConfig.key, id];
+      params = [id];
     } else if (searchTerm) {
       // 搜索查询
       query = QUERIES.SEARCH_PASSWORDS_WITH_PAGINATION;
       const offset = (page - 1) * limit;
-      params = [encryptionConfig.key, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, limit, offset];
+      params = [`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, limit, offset];
     } else {
       // 分页查询所有记录
       query = QUERIES.SELECT_ALL_PASSWORDS_WITH_PAGINATION;
       const offset = (page - 1) * limit;
-      params = [encryptionConfig.key, limit, offset];
+      params = [limit, offset];
     }
     
     const [rows] = await connection.query(query, params);
+    
+    // 返回密文，不解密
     return rows;
   }
 
@@ -142,7 +149,8 @@ class Database {
    */
   async updateById(id, name, url, username, password, note, from) {
     const connection = await this.connect();
-    await connection.query(QUERIES.UPDATE_RECORD_BY_ID, [name, url, username, password, encryptionConfig.key, note, from, id]);
+    const encryptedPassword = this.crypto.encrypt(password);
+    await connection.query(QUERIES.UPDATE_RECORD_BY_ID, [name, url, username, encryptedPassword, note, from, id]);
     return { id, name, url, username, note, from };
   }
 

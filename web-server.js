@@ -207,6 +207,46 @@ router.get('/api/stats', async (ctx) => {
   }
 });
 
+// 解密密码API
+router.post('/api/decrypt', async (ctx) => {
+  try {
+    const { encryptedPassword, key } = ctx.request.body;
+    
+    if (!encryptedPassword || !key) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        message: '缺少必要参数'
+      };
+      return;
+    }
+
+    // 使用提供的密钥解密
+    const Crypto = require('./src/utils/crypto');
+    const crypto = new Crypto(key);
+    
+    try {
+      const decryptedPassword = crypto.decrypt(encryptedPassword);
+      ctx.body = {
+        success: true,
+        data: { password: decryptedPassword }
+      };
+    } catch (error) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        message: '密钥错误或密码格式不正确'
+      };
+    }
+  } catch (error) {
+    ctx.status = 500;
+    ctx.body = {
+      success: false,
+      message: error.message
+    };
+  }
+});
+
 // 导入密码API
 router.post('/api/import', upload.single('file'), async (ctx) => {
   try {

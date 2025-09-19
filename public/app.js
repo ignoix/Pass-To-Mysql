@@ -76,9 +76,15 @@ class PasswordManager {
 
         // 密码显示/隐藏切换
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('password-toggle')) {
-                this.togglePassword(e.target);
+            if (e.target.classList.contains('password-toggle') || e.target.closest('.password-toggle')) {
+                const button = e.target.classList.contains('password-toggle') ? e.target : e.target.closest('.password-toggle');
+                this.showKeyModal(button);
             }
+        });
+
+        // 确认解密按钮
+        document.getElementById('confirmDecryptBtn').addEventListener('click', () => {
+            this.decryptPassword();
         });
 
         // 编辑和删除按钮
@@ -87,6 +93,12 @@ class PasswordManager {
                 this.editPassword(e.target.dataset.id);
             } else if (e.target.classList.contains('delete-btn')) {
                 this.showDeleteModal(e.target.dataset.id);
+            } else if (e.target.classList.contains('copy-password') || e.target.closest('.copy-password')) {
+                const button = e.target.classList.contains('copy-password') ? e.target : e.target.closest('.copy-password');
+                this.copyPassword(button);
+            } else if (e.target.classList.contains('password-hide') || e.target.closest('.password-hide')) {
+                const button = e.target.classList.contains('password-hide') ? e.target : e.target.closest('.password-hide');
+                this.hidePassword(button);
             }
         });
     }
@@ -176,11 +188,14 @@ class PasswordManager {
                 </td>
                 <td>
                     <div class="input-group input-group-sm">
-                        <input type="password" class="form-control password-field" value="${this.escapeHtml(password.password)}" readonly>
-                        <button class="btn btn-outline-secondary password-toggle" type="button" title="显示/隐藏密码">
+                        <input type="password" class="form-control password-field" value="••••••••" readonly data-encrypted="${this.escapeHtml(password.password)}">
+                        <button class="btn btn-outline-secondary password-toggle" type="button" title="解密/显示密码">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button class="btn btn-outline-primary btn-sm" onclick="navigator.clipboard.writeText('${this.escapeHtml(password.password)}')" title="复制密码">
+                        <button class="btn btn-outline-warning btn-sm password-hide" type="button" title="隐藏密码" style="display: none;">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm copy-password" type="button" title="复制密码">
                             <i class="bi bi-clipboard"></i>
                         </button>
                     </div>
@@ -433,16 +448,139 @@ class PasswordManager {
         }
     }
 
+    showKeyModal(button) {
+        this.currentDecryptButton = button;
+        this.currentDecryptInput = button.parentElement.querySelector('input');
+        this.currentDecryptIcon = button.querySelector('i');
+        
+        // 清空密钥输入框
+        document.getElementById('decryptKey').value = '';
+        
+        // 显示模态框
+        const keyModal = new bootstrap.Modal(document.getElementById('keyModal'));
+        keyModal.show();
+    }
+
+    async decryptPassword() {
+        const key = document.getElementById('decryptKey').value.trim();
+        
+        if (!key) {
+            this.showError('请输入解密密钥');
+            return;
+        }
+
+        const encryptedPassword = this.currentDecryptInput.dataset.encrypted;
+        
+        try {
+            const response = await fetch('/api/decrypt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    encryptedPassword: encryptedPassword,
+                    key: key
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // 解密成功，显示明文
+                this.currentDecryptInput.value = result.data.password;
+                this.currentDecryptInput.type = 'text';
+                this.currentDecryptIcon.className = 'bi bi-eye-slash';
+                this.currentDecryptInput.dataset.decrypted = 'true';
+                
+                // 显示隐藏按钮，隐藏解密按钮
+                const hideButton = this.currentDecryptButton.parentElement.querySelector('.password-hide');
+                if (hideButton) {
+                    hideButton.style.display = 'inline-block';
+                    this.currentDecryptButton.style.display = 'none';
+                }
+                
+                // 关闭模态框
+                const keyModal = bootstrap.Modal.getInstance(document.getElementById('keyModal'));
+                keyModal.hide();
+                
+                this.showSuccess('密码解密成功');
+            } else {
+                this.showError(result.message || '解密失败');
+            }
+        } catch (error) {
+            console.error('解密错误:', error);
+            this.showError('解密失败，请检查网络连接');
+        }
+    }
+
     togglePassword(button) {
         const input = button.parentElement.querySelector('input');
         const icon = button.querySelector('i');
         
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.className = 'bi bi-eye-slash';
+        // 如果已经解密过，直接切换显示/隐藏
+        if (input.dataset.decrypted === 'true') {
+            if (input.type === 'password') {
+                // 显示明文
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                // 隐藏明文
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
         } else {
-            input.type = 'password';
-            icon.className = 'bi bi-eye';
+            // 如果未解密，显示密钥输入模态框
+            this.showKeyModal(button);
+        }
+    }
+
+    hidePassword(button) {
+        const input = button.parentElement.querySelector('input');
+        const toggleButton = button.parentElement.querySelector('.password-toggle');
+        
+        // 隐藏明文，显示密文
+        input.value = '••••••••';
+        input.type = 'password';
+        input.dataset.decrypted = 'false';
+        
+        // 切换按钮显示
+        button.style.display = 'none';
+        toggleButton.style.display = 'inline-block';
+        toggleButton.querySelector('i').className = 'bi bi-eye';
+    }
+
+    copyPassword(button) {
+        const input = button.parentElement.querySelector('input');
+        
+        let textToCopy;
+        let successMessage;
+        
+        if (input.dataset.decrypted === 'true') {
+            // 如果已解密，复制明文
+            textToCopy = input.value;
+            successMessage = '密码已复制到剪贴板';
+        } else {
+            // 如果未解密，复制密文
+            textToCopy = input.dataset.encrypted;
+            successMessage = '密文已复制到剪贴板';
+        }
+        
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                this.showSuccess(successMessage);
+            }).catch((error) => {
+                console.error('Clipboard write failed:', error);
+                this.showError('复制失败');
+            });
+        } else {
+            // 备用方案
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            this.showSuccess(successMessage);
         }
     }
 

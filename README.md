@@ -50,7 +50,7 @@
    DB_USER=root
    DB_PASSWORD=your_password_here
    DB_NAME=local_pass
-   ENCRYPTION_KEY=your_32_character_encryption_key_here
+   CRYPTO_KEY=your_32_character_encryption_key_here
    ```
 
 4. **启动Web应用**
@@ -87,7 +87,7 @@
    
    **注意**：
    - `.env` 文件已添加到 `.gitignore` 中，不会被提交到仓库
-   - `ENCRYPTION_KEY` 用于加密/解密密码，建议使用32位随机字符串
+   - `CRYPTO_KEY` 用于crypto-js加密/解密密码，建议使用32位随机字符串
 
 4. **准备密码文件**
    
@@ -419,7 +419,7 @@ DB_HOST=localhost          # 数据库主机地址
 DB_USER=root              # 数据库用户名
 DB_PASSWORD=your_password # 数据库密码
 DB_NAME=local_pass        # 目标数据库名称
-ENCRYPTION_KEY=your_32_character_encryption_key_here  # 加密密钥（32位）
+CRYPTO_KEY=your_32_character_encryption_key_here  # crypto-js加密密钥（32位）
 ```
 
 **🔑 加密密钥说明**：
@@ -482,7 +482,7 @@ await connection.query(`
    ```
    Error: Incorrect key file
    ```
-   - 检查 `ENCRYPTION_KEY` 是否与导入时使用的密钥相同
+   - 检查 `CRYPTO_KEY` 是否与导入时使用的密钥相同
    - 确保密钥长度正确（建议32位）
 
 5. **密码显示为乱码**

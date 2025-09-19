@@ -20,10 +20,12 @@
     "test": "node cli.js test",
     "help": "node cli.js help",
     "legacy:import": "node import-multiple.js",
-    "legacy:decrypt": "node decrypt.js"
+    "legacy:decrypt": "node decrypt.js",
+    "migrate:crypto": "node migrate-to-cryptojs.js"
   },
   "dependencies": {
     "@koa/multer": "^4.0.0",
+    "crypto-js": "^4.2.0",
     "csv-parser": "^3.0.0",
     "dotenv": "^17.2.2",
     "ejs": "^3.1.10",

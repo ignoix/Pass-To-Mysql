@@ -11,11 +11,10 @@ const dbConfig = {
 };
 
 /**
- * 加密配置
+ * 加密密钥（用于crypto-js）
  */
-const encryptionConfig = {
-  key: process.env.ENCRYPTION_KEY || 'mySecretKey123456789012345678901234567890'
-};
+const cryptoKey = process.env.CRYPTO_KEY || 'mySecretKey123456789012345678901234567890';
+console.log('cryptoKey', cryptoKey);
 
 /**
  * 应用配置
@@ -33,6 +32,6 @@ const appConfig = {
 
 module.exports = {
   dbConfig,
-  encryptionConfig,
+  cryptoKey,
   appConfig
 };
