@@ -83,21 +83,76 @@ class Database {
   /**
    * 查询密码（解密）
    */
-  async queryPasswords(searchTerm = '') {
+  async queryPasswords(searchTerm = '', page = 1, limit = 20, id = null) {
+    const connection = await this.connect();
+    
+    let query, params;
+    
+    if (id) {
+      // 根据ID查询单条记录
+      query = QUERIES.SELECT_PASSWORD_BY_ID;
+      params = [encryptionConfig.key, id];
+    } else if (searchTerm) {
+      // 搜索查询
+      query = QUERIES.SEARCH_PASSWORDS_WITH_PAGINATION;
+      const offset = (page - 1) * limit;
+      params = [encryptionConfig.key, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, limit, offset];
+    } else {
+      // 分页查询所有记录
+      query = QUERIES.SELECT_ALL_PASSWORDS_WITH_PAGINATION;
+      const offset = (page - 1) * limit;
+      params = [encryptionConfig.key, limit, offset];
+    }
+    
+    const [rows] = await connection.query(query, params);
+    return rows;
+  }
+
+  /**
+   * 获取总记录数
+   */
+  async getTotalCount(searchTerm = '') {
     const connection = await this.connect();
     
     let query, params;
     
     if (searchTerm) {
-      query = QUERIES.SEARCH_PASSWORDS;
-      params = [encryptionConfig.key, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`];
+      query = QUERIES.COUNT_SEARCH_RESULTS;
+      params = [`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`];
     } else {
-      query = QUERIES.SELECT_ALL_PASSWORDS;
-      params = [encryptionConfig.key];
+      query = QUERIES.COUNT_TOTAL;
+      params = [];
     }
     
     const [rows] = await connection.query(query, params);
-    return rows;
+    return rows[0].total;
+  }
+
+  /**
+   * 根据ID查找记录
+   */
+  async findById(id) {
+    const connection = await this.connect();
+    const [rows] = await connection.query(QUERIES.FIND_BY_ID, [id]);
+    return rows.length > 0 ? rows[0] : null;
+  }
+
+  /**
+   * 根据ID更新记录
+   */
+  async updateById(id, name, url, username, password, note, from) {
+    const connection = await this.connect();
+    await connection.query(QUERIES.UPDATE_RECORD_BY_ID, [name, url, username, password, encryptionConfig.key, note, from, id]);
+    return { id, name, url, username, note, from };
+  }
+
+  /**
+   * 根据ID删除记录
+   */
+  async deleteById(id) {
+    const connection = await this.connect();
+    await connection.query(QUERIES.DELETE_RECORD_BY_ID, [id]);
+    return { id };
   }
 
   /**

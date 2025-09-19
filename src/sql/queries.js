@@ -214,6 +214,98 @@ const QUERIES = {
       CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password
     FROM passwords 
     LIMIT 1
+  `,
+
+  /**
+   * 根据ID查询单条记录
+   */
+  SELECT_PASSWORD_BY_ID: `
+    SELECT 
+      id,
+      name,
+      url,
+      username,
+      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
+      note,
+      \`from\`,
+      created_at,
+      updated_at
+    FROM passwords 
+    WHERE id = ?
+  `,
+
+  /**
+   * 分页查询所有密码
+   */
+  SELECT_ALL_PASSWORDS_WITH_PAGINATION: `
+    SELECT 
+      id,
+      name,
+      url,
+      username,
+      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
+      note,
+      \`from\`,
+      created_at,
+      updated_at
+    FROM passwords 
+    ORDER BY \`from\`, name
+    LIMIT ? OFFSET ?
+  `,
+
+  /**
+   * 分页搜索密码
+   */
+  SEARCH_PASSWORDS_WITH_PAGINATION: `
+    SELECT 
+      id,
+      name,
+      url,
+      username,
+      CAST(AES_DECRYPT(password_encrypted, ?) AS CHAR) as password,
+      note,
+      \`from\`,
+      created_at,
+      updated_at
+    FROM passwords 
+    WHERE name LIKE ? OR username LIKE ? OR url LIKE ? OR \`from\` LIKE ?
+    ORDER BY \`from\`, name
+    LIMIT ? OFFSET ?
+  `,
+
+  /**
+   * 统计搜索结果数量
+   */
+  COUNT_SEARCH_RESULTS: `
+    SELECT COUNT(*) as total 
+    FROM passwords 
+    WHERE name LIKE ? OR username LIKE ? OR url LIKE ? OR \`from\` LIKE ?
+  `,
+
+  /**
+   * 根据ID查找记录
+   */
+  FIND_BY_ID: `
+    SELECT id, name, url, username, note, \`from\`, created_at, updated_at
+    FROM passwords 
+    WHERE id = ?
+  `,
+
+  /**
+   * 根据ID更新记录
+   */
+  UPDATE_RECORD_BY_ID: `
+    UPDATE passwords 
+    SET name = ?, url = ?, username = ?, password_encrypted = AES_ENCRYPT(?, ?), 
+        note = ?, \`from\` = ?, updated_at = CURRENT_TIMESTAMP 
+    WHERE id = ?
+  `,
+
+  /**
+   * 根据ID删除记录
+   */
+  DELETE_RECORD_BY_ID: `
+    DELETE FROM passwords WHERE id = ?
   `
 };
 

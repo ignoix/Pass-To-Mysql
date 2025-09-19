@@ -112,33 +112,44 @@ class PasswordService {
   /**
    * 查询密码
    */
-  async queryPasswords(searchTerm = '') {
+  async queryPasswords(searchTerm = '', page = 1, limit = 20, id = null) {
     try {
-      const rows = await this.db.queryPasswords(searchTerm);
+      const rows = await this.db.queryPasswords(searchTerm, page, limit, id);
       
       if (rows.length === 0) {
+        if (id) {
+          return { passwords: [], total: 0 };
+        }
         console.log('未找到匹配的记录');
-        return;
+        return { passwords: [], total: 0 };
       }
       
-      console.log(`\n找到 ${rows.length} 条记录：\n`);
-      console.log('='.repeat(100));
+      // 如果是CLI调用，显示详细信息
+      if (!id && page === 1 && limit === 20) {
+        console.log(`\n找到 ${rows.length} 条记录：\n`);
+        console.log('='.repeat(100));
+        
+        rows.forEach((row, index) => {
+          console.log(`${index + 1}. ${row.name}`);
+          console.log(`   URL: ${row.url}`);
+          console.log(`   用户名: ${row.username}`);
+          console.log(`   密码: ${row.password}`);
+          console.log(`   来源: ${row.from}`);
+          if (row.note) {
+            console.log(`   备注: ${row.note}`);
+          }
+          console.log(`   创建时间: ${row.created_at}`);
+          if (row.updated_at && row.updated_at !== row.created_at) {
+            console.log(`   更新时间: ${row.updated_at}`);
+          }
+          console.log('-'.repeat(80));
+        });
+      }
       
-      rows.forEach((row, index) => {
-        console.log(`${index + 1}. ${row.name}`);
-        console.log(`   URL: ${row.url}`);
-        console.log(`   用户名: ${row.username}`);
-        console.log(`   密码: ${row.password}`);
-        console.log(`   来源: ${row.from}`);
-        if (row.note) {
-          console.log(`   备注: ${row.note}`);
-        }
-        console.log(`   创建时间: ${row.created_at}`);
-        if (row.updated_at && row.updated_at !== row.created_at) {
-          console.log(`   更新时间: ${row.updated_at}`);
-        }
-        console.log('-'.repeat(80));
-      });
+      // 获取总数
+      const total = await this.db.getTotalCount(searchTerm);
+      
+      return { passwords: rows, total };
       
     } catch (error) {
       console.error('查询失败:', error.message);
@@ -165,6 +176,74 @@ class PasswordService {
       
     } catch (error) {
       console.error('统计失败:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * 添加密码
+   */
+  async addPassword(passwordData) {
+    try {
+      const { name, url, username, password, note = '', from = 'web' } = passwordData;
+      
+      // 检查记录是否已存在
+      const existing = await this.db.findExisting(name, url, username, from);
+      
+      if (existing) {
+        throw new Error('该记录已存在');
+      }
+      
+      // 插入新记录
+      const result = await this.db.insert(name, url, username, password, note, from);
+      return result;
+      
+    } catch (error) {
+      console.error('添加密码失败:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * 更新密码
+   */
+  async updatePassword(id, passwordData) {
+    try {
+      const { name, url, username, password, note = '', from = 'web' } = passwordData;
+      
+      // 检查记录是否存在
+      const existing = await this.db.findById(id);
+      if (!existing) {
+        throw new Error('记录不存在');
+      }
+      
+      // 更新记录
+      const result = await this.db.updateById(id, name, url, username, password, note, from);
+      return result;
+      
+    } catch (error) {
+      console.error('更新密码失败:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * 删除密码
+   */
+  async deletePassword(id) {
+    try {
+      // 检查记录是否存在
+      const existing = await this.db.findById(id);
+      if (!existing) {
+        throw new Error('记录不存在');
+      }
+      
+      // 删除记录
+      const result = await this.db.deleteById(id);
+      return result;
+      
+    } catch (error) {
+      console.error('删除密码失败:', error.message);
       throw error;
     }
   }

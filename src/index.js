@@ -45,14 +45,13 @@ class PasswordManager {
   /**
    * 查询密码
    */
-  async query(searchTerm = '') {
+  async query(searchTerm = '', page = 1, limit = 20, id = null) {
     try {
-      await this.service.queryPasswords(searchTerm);
+      const result = await this.service.queryPasswords(searchTerm, page, limit, id);
+      return result;
     } catch (error) {
       console.error('❌ 查询失败:', error.message);
-      process.exit(1);
-    } finally {
-      await this.service.close();
+      throw error;
     }
   }
 
@@ -61,12 +60,50 @@ class PasswordManager {
    */
   async stats() {
     try {
-      await this.service.getStats();
+      const result = await this.service.getStats();
+      return result;
     } catch (error) {
       console.error('❌ 统计失败:', error.message);
-      process.exit(1);
-    } finally {
-      await this.service.close();
+      throw error;
+    }
+  }
+
+  /**
+   * 添加密码
+   */
+  async addPassword(passwordData) {
+    try {
+      const result = await this.service.addPassword(passwordData);
+      return result;
+    } catch (error) {
+      console.error('❌ 添加密码失败:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * 更新密码
+   */
+  async updatePassword(id, passwordData) {
+    try {
+      const result = await this.service.updatePassword(id, passwordData);
+      return result;
+    } catch (error) {
+      console.error('❌ 更新密码失败:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * 删除密码
+   */
+  async deletePassword(id) {
+    try {
+      const result = await this.service.deletePassword(id);
+      return result;
+    } catch (error) {
+      console.error('❌ 删除密码失败:', error.message);
+      throw error;
     }
   }
 
